@@ -1,11 +1,14 @@
 
+import { useSocketContext } from "../../context/SocketContext";
 import useConversation, { ConversationType } from "../../zustand/useConversation";
 
 const Conversation = ({ conversation, emoji }: { conversation: ConversationType , emoji:string}) => {
 	const {setSelectedConversation,selectedConversation}=useConversation();
 	const isSelected = selectedConversation?.id === conversation.id;
 
-	const isOnline = false;
+	const {onlineUsers} = useSocketContext();
+
+	const isOnline = onlineUsers.includes(conversation.id);
 	return (
 		<>
 			<div className={`flex gap-2 items-center hover:bg-sky-500 rounded p-2 py-1 cursor-pointer${isSelected

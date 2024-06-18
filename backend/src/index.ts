@@ -2,12 +2,12 @@ import express from "express";
 import authRoutes from "./routes/authRoutes";
 import messageRoutes from "./routes/messageRoutes";
 import cookieParser from "cookie-parser";
+import {app, server} from "../socket/socket"
 
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const app = express();
 const PORT = process.env.PORT ||  8080;
 
 app.use(cookieParser());
@@ -20,6 +20,6 @@ app.get('/', (req, res) => {
     res.send("Hello world");
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log("Server is running on port", +PORT);
 });
