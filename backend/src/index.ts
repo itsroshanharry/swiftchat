@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT ||  8080;
 
 app.use(cookieParser());
 app.use(express.json());
@@ -19,6 +20,6 @@ app.get('/', (req, res) => {
     res.send("Hello world");
 });
 
-app.listen(5000, () => {
-    console.log("Server is running on port 5000");
+app.listen(PORT, () => {
+    console.log("Server is running on port", +PORT);
 });
