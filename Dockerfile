@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Copy the certificate file to the appropriate directory
-COPY backend/kafka/ca-cert.pem /app/backend/kafka/ca-cert.pem
+COPY /ca-cert.pem /app/ca-cert.pem
 
 # Build the project (frontend and backend)
 RUN npm run build
