@@ -1,10 +1,5 @@
 import { Kafka } from 'kafkajs';
 import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
-
-
-dotenv.config();
 
 const kafkaUsername = process.env.KAFKA_USERNAME || '';
 const kafkaPassword = process.env.KAFKA_PASSWORD || '';
@@ -16,7 +11,7 @@ if (!kafkaUsername || !kafkaPassword) {
 const kafka = new Kafka({
   brokers: [process.env.KAFKA_HOST || 'localhost:9092'],
   ssl: {
-    ca: [fs.readFileSync(path.resolve('../../ca-cert.pem'), 'utf-8')],
+    ca: [fs.readFileSync('/ca-cert.pem', 'utf-8')],
     rejectUnauthorized: true,
   },
   sasl: {
