@@ -16,7 +16,7 @@ if (!kafkaUsername || !kafkaPassword) {
 const kafka = new Kafka({
   brokers: [process.env.KAFKA_HOST || 'localhost:9092'],
   ssl: {
-    ca: [fs.readFileSync(path.resolve(__dirname, './ca-cert.pem'), 'utf-8')],
+    ca: [fs.readFileSync(path.resolve('./ca-cert.pem'), 'utf-8')],
     rejectUnauthorized: true,
   },
   sasl: {
