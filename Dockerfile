@@ -13,8 +13,8 @@ RUN npm install
 # Copy all source code to the working directory
 COPY . .
 
-# Copy the certificate file to the working directory
-COPY ca-cert.pem /app/ca-cert.pem
+# Copy the certificate file to the appropriate directory
+COPY backend/ca-cert.pem /app/backend/ca-cert.pem
 
 # Build the project (frontend and backend)
 RUN npm run build
