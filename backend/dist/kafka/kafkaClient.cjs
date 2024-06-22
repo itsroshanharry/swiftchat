@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Construct the absolute path to ca-cert.pem
-const certPath = path.resolve(__dirname, '../../ca-cert.pem');
+const certPath = path.resolve(__dirname, '/../../ca-cert.pem');
 
 const kafka = new Kafka({
   brokers: [process.env.KAFKA_HOST || 'localhost:9092'],

@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import { createClient } from 'redis';
 import { createAdapter } from '@socket.io/redis-adapter';
-import kafka from '../kafka/kafkaClient.js'; // Importing kafka from kafkaClient.ts
+import kafka from '../kafka/kafkaClient.cjs'; // Importing kafka from kafkaClient.ts
 import express from 'express';
 const app = express();
 const server = createServer(app);
