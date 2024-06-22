@@ -12,6 +12,6 @@
 	"ts-node": {
 		"esm": true
 	},
-	"include": ["backend/src/**/*", "backend/kafka/kafkaProducer.ts", "backend/redis/redisClient.ts"], // Specifies which files to include when compiling your project.
+	"include": ["backend/src/**/*", "backend/src/kafka/kafkaProducer.ts", "backend/redis/redisClient.ts"], // Specifies which files to include when compiling your project.
 	"exclude": ["node_modules", "**/*.spec.ts", "frontend"] // Specifies which files to exclude when compiling your project.
 }
