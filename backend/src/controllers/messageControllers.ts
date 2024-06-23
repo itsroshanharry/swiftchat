@@ -1,6 +1,8 @@
+// messageController.ts
+
 import { Request, Response } from 'express';
-import prisma from '../db/prisma.js';
-import producer from '../kafka/kafkaProducer.js';
+import prisma from '../db/prisma.js'; // Adjust path as needed
+import producer, { sendNotification } from '../kafka/kafkaProducer.js';
 
 // Send message to a user
 export const sendMessage = async (req: Request, res: Response) => {
@@ -22,21 +24,31 @@ export const sendMessage = async (req: Request, res: Response) => {
     let conversation;
 
     try {
+      // Fetch sender's full name
+      const sender = await prisma.user.findUnique({
+        where: { id: senderId },
+        select: { fullName: true },
+      });
+
+      if (!sender) {
+        throw new Error(`Sender with ID ${senderId} not found.`);
+      }
+
       conversation = await prisma.conversation.findFirst({
         where: {
           participantIds: {
-            hasEvery: [senderId, receiverId]
-          }
-        }
+            hasEvery: [senderId, receiverId],
+          },
+        },
       });
 
       if (!conversation) {
         conversation = await prisma.conversation.create({
           data: {
             participantIds: {
-              set: [senderId, receiverId]
-            }
-          }
+              set: [senderId, receiverId],
+            },
+          },
         });
       }
 
@@ -44,8 +56,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         data: {
           senderId,
           body: message,
-          conversationId: conversation.id
-        }
+          conversationId: conversation.id,
+        },
       });
 
       const messagePayload = JSON.stringify({ ...newMessage, receiverId });
@@ -53,6 +65,14 @@ export const sendMessage = async (req: Request, res: Response) => {
         topic: process.env.KAFKA_TOPIC || 'default_topic',
         messages: [{ value: messagePayload }],
       });
+
+      // Send notification with sender's full name
+      const notification = {
+        type: 'newMessage',
+        message: `New message received from ${sender.fullName}`, // Include sender's full name
+        receiverId,
+      };
+      await sendNotification(notification);
 
       res.status(201).json(newMessage);
     } catch (error: any) {
@@ -65,36 +85,40 @@ export const sendMessage = async (req: Request, res: Response) => {
   }
 };
 
+
+// Other functions...
+
+
 // Get messages for a specific user conversation
 export const getMessages = async (req: Request, res: Response) => {
   try {
-		const { id: userToChatId } = req.params;
-		const senderId = req.user.id;
+    const { id: userToChatId } = req.params;
+    const senderId = req.user.id;
 
-		const conversation = await prisma.conversation.findFirst({
-			where: {
-				participantIds: {
-					hasEvery: [senderId, userToChatId],
-				},
-			},
-			include: {
-				messages: {
-					orderBy: {
-						createdAt: "asc",
-					},
-				},
-			},
-		});
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        participantIds: {
+          hasEvery: [senderId, userToChatId],
+        },
+      },
+      include: {
+        messages: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
+    });
 
-		if (!conversation) {
-			return res.status(200).json([]);
-		}
+    if (!conversation) {
+      return res.status(200).json([]);
+    }
 
-		res.status(200).json(conversation.messages);
-	} catch (error: any) {
-		console.error("Error in getMessages: ", error.message);
-		res.status(500).json({ error: "Internal server error" });
-	}
+    res.status(200).json(conversation.messages);
+  } catch (error: any) {
+    console.error("Error in getMessages: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 // Get users for sidebar, excluding authenticated user

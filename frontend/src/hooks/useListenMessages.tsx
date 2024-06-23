@@ -1,4 +1,3 @@
-// useListener.tsx
 import { useEffect } from "react";
 import { useSocketContext } from "../context/SocketContext";
 import useConversation from "../zustand/useConversation";
@@ -11,18 +10,17 @@ const useListenMessages = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleMessage = (newMessage: any) => {
-      console.log("New message received:", newMessage);
+    const handleNewMessage = (newMessage: any) => {
       newMessage.shouldShake = true;
       const sound = new Audio(notificationSound);
       sound.play();
       setMessages([...messages, newMessage]);
     };
 
-    socket.on("newMessage", handleMessage);
+    socket.on("newMessage", handleNewMessage);
 
     return () => {
-      socket.off("newMessage", handleMessage);
+      socket.off("newMessage", handleNewMessage);
     };
   }, [socket, messages, setMessages]);
 };
