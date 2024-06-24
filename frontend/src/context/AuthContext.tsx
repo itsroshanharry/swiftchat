@@ -13,7 +13,8 @@ type AuthUserType = {
 const AuthContext = createContext<{
     authUser: AuthUserType | null;
     setAuthUser: Dispatch<SetStateAction<AuthUserType | null>>;
-    isLoading: boolean
+    isLoading: boolean;
+  
 }>({
     authUser: null,
     setAuthUser: () =>{},

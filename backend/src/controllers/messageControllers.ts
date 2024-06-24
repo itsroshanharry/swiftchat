@@ -3,6 +3,7 @@
 import { Request, Response } from 'express';
 import prisma from '../db/prisma.js'; // Adjust path as needed
 import producer, { sendNotification } from '../kafka/kafkaProducer.js';
+import redisClient from "../redis/redisClient.js";
 
 // Send message to a user
 export const sendMessage = async (req: Request, res: Response) => {
@@ -69,6 +70,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       // Send notification with sender's full name
       const notification = {
         type: 'newMessage',
+        senderId,
         message: `New message received from ${sender.fullName}`, // Include sender's full name
         receiverId,
       };
@@ -94,6 +96,18 @@ export const getMessages = async (req: Request, res: Response) => {
   try {
     const { id: userToChatId } = req.params;
     const senderId = req.user.id;
+    const cacheKey = `messages:${senderId}:${userToChatId}`;
+
+    console.log(`Attempting to retrieve messages for key: ${cacheKey}`);
+
+    // Try to get messages from cache
+    const cachedMessages = await redisClient.get(cacheKey);
+    if (cachedMessages) {
+      console.log('Messages found in Redis cache');
+      return res.status(200).json(JSON.parse(cachedMessages));
+    }
+
+    console.log('Messages not found in cache, querying database');
 
     const conversation = await prisma.conversation.findFirst({
       where: {
@@ -111,9 +125,16 @@ export const getMessages = async (req: Request, res: Response) => {
     });
 
     if (!conversation) {
+      console.log('No conversation found in database');
       return res.status(200).json([]);
     }
 
+    console.log('Conversation found in database, caching messages');
+
+
+    await redisClient.set(cacheKey, JSON.stringify(conversation.messages), {
+      EX: 3600 // expire after 1 hour
+    });
     res.status(200).json(conversation.messages);
   } catch (error: any) {
     console.error("Error in getMessages: ", error.message);
