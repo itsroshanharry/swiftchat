@@ -1,11 +1,9 @@
-// messageController.ts
 
 import { Request, Response } from 'express';
 import prisma from '../db/prisma.js'; // Adjust path as needed
 import producer, { sendNotification } from '../kafka/kafkaProducer.js';
 import redisClient from "../redis/redisClient.js";
 
-// Send message to a user
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     console.log('Request params:', req.params);
@@ -76,6 +74,22 @@ export const sendMessage = async (req: Request, res: Response) => {
       };
       await sendNotification(notification);
 
+      // Update cache for both users
+      const cacheKey1 = `messages:${senderId}:${receiverId}`;
+      const cacheKey2 = `messages:${receiverId}:${senderId}`;
+
+      const updateCache = async (key: string) => {
+        const cachedMessages = await redisClient.get(key);
+        if (cachedMessages) {
+          const messages = JSON.parse(cachedMessages);
+          messages.push(newMessage);
+          await redisClient.set(key, JSON.stringify(messages), { EX: 3600 });
+        }
+      };
+
+      await updateCache(cacheKey1);
+      await updateCache(cacheKey2);
+
       res.status(201).json(newMessage);
     } catch (error: any) {
       console.error('Error in Prisma or Kafka operation:', error.message);
@@ -86,10 +100,6 @@ export const sendMessage = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
-// Other functions...
-
 
 // Get messages for a specific user conversation
 export const getMessages = async (req: Request, res: Response) => {
@@ -130,7 +140,6 @@ export const getMessages = async (req: Request, res: Response) => {
     }
 
     console.log('Conversation found in database, caching messages');
-
 
     await redisClient.set(cacheKey, JSON.stringify(conversation.messages), {
       EX: 3600 // expire after 1 hour
