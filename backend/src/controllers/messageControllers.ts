@@ -26,7 +26,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       // Fetch sender's full name
       const sender = await prisma.user.findUnique({
         where: { id: senderId },
-        select: { fullName: true },
+        select: { fullName: true, profilePic: true },
       });
 
       if (!sender) {
@@ -69,6 +69,8 @@ export const sendMessage = async (req: Request, res: Response) => {
       const notification = {
         type: 'newMessage',
         senderId,
+        senderFullName: sender.fullName,
+        senderProfilePic: sender.profilePic,
         message: `New message received from ${sender.fullName}`, // Include sender's full name
         receiverId,
       };

@@ -1,34 +1,48 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useSocketContext } from "../context/SocketContext";
-import useConversation, { MessageType } from "../zustand/useConversation";
+import { toast } from "react-toastify";
+import useNotifications, { Notification } from "../zustand/useNotification";
 import notificationSound from "../assets/sounds/notification.mp3";
+import useConversation from "../zustand/useConversation";
+import { useNavigate } from "react-router-dom";
 
-const useListenMessages = () => {
-  const { socket } = useSocketContext();
-  const { messages, setMessages, selectedConversation } = useConversation();
+const useListenNotifications = () => {
+    const { socket } = useSocketContext();
+    const { addNotification } = useNotifications();
+    const { selectedConversation, setSelectedConversation } = useConversation();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!socket) return;
+    const handleNotificationClick = useCallback((notification: Notification) => {
+        setSelectedConversation({
+            id: notification.senderId,
+            fullName: notification.senderFullName, // You might need to fetch this separately
+            profilePic: notification.senderProfilePic // You might need to fetch this separately
+        });
+        navigate("/");
+    }, [setSelectedConversation, navigate]);
 
-    const handleNewMessage = (newMessage: MessageType) => {
-      const sound = new Audio(notificationSound);
-      sound.play();
+    useEffect(() => {
+        if (!socket) return;
 
-      if (selectedConversation && newMessage.senderId === selectedConversation.id) {
-        const updatedMessages = [...messages, { ...newMessage, shouldShake: true }];
-        setMessages(updatedMessages);
-      } else {
-        // Handle notifications for messages in other conversations
-        console.log("New message in another conversation:", newMessage);
-      }
-    };
+        const handleNotification = (newNotification: Notification) => {
+            console.log("New notification received:", newNotification);
+           
+            if (!selectedConversation || selectedConversation?.id !== newNotification.senderId) {
+                addNotification(newNotification);
+                const sound = new Audio(notificationSound);
+                sound.play();
+                toast.success(newNotification.message, {
+                    onClick: () => handleNotificationClick(newNotification)
+                });
+            }
+        };
 
-    socket.on("newMessage", handleNewMessage);
+        socket.on("newNotification", handleNotification);
 
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-    };
-  }, [socket, messages, setMessages, selectedConversation]);
+        return () => {
+            socket.off("newNotification", handleNotification);
+        };
+    }, [socket, addNotification, selectedConversation, handleNotificationClick]);
 };
 
-export default useListenMessages;
+export default useListenNotifications;

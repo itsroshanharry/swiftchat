@@ -3,6 +3,8 @@ import create from 'zustand';
 export interface Notification {
     id: string;
     senderId: string,
+    senderFullName: string,
+    senderProfilePic: string,
     message: string;
     createdAt: string;
     receiverId: string;
