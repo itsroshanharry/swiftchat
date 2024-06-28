@@ -31,8 +31,7 @@ const KAFKA_NOTIFICATION_TOPIC = process.env.KAFKA_NOTIFICATION_TOPIC || 'notifi
 const consumer = kafka.consumer({ groupId: 'chat-group' });
 const notificationConsumer = kafka.consumer({ groupId: 'notification-group' });
 
-const userSocketMap: { [key: string]: string } = {}; 
-
+const userSocketMap: { [key: string]: string } = {};
 
 // Modified to use Redis
 export const getReceiverSocketId = async (receiverId: string) => {
@@ -45,6 +44,11 @@ io.on('connection', (socket) => {
   if (userId) {
     pubClient.hSet('users', userId, socket.id).then(() => {
       console.log(`User connected: ${userId}, Socket ID: ${socket.id}`);
+
+      // Update userSocketMap
+      userSocketMap[userId] = socket.id;
+
+      // Emit updated online users to all clients
       io.emit('getOnlineUsers', Object.keys(userSocketMap));
     });
   }
@@ -53,6 +57,11 @@ io.on('connection', (socket) => {
     if (userId) {
       pubClient.hDel('users', userId).then(() => {
         console.log(`User disconnected: ${userId}`);
+
+        // Remove user from userSocketMap
+        delete userSocketMap[userId];
+
+        // Emit updated online users to all clients
         io.emit('getOnlineUsers', Object.keys(userSocketMap));
       });
     }
