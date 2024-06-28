@@ -3,8 +3,10 @@ dotenv.config();
 
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
-import kafka from '../src/kafka/kafkaClient.js'; 
+import kafka from '../src/kafka/kafkaClient.js';
 import express from 'express';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
 
 const app = express();
 const server = createServer(app);
@@ -15,6 +17,15 @@ const io = new SocketIOServer(server, {
   },
 });
 
+// Redis setup
+const pubClient = createClient({ url: process.env.REDIS_URL });
+const subClient = pubClient.duplicate();
+
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+  io.adapter(createAdapter(pubClient, subClient));
+  console.log('Socket.IO Redis adapter connected');
+});
+
 const KAFKA_TOPIC = process.env.KAFKA_TOPIC || 'default_topic';
 const KAFKA_NOTIFICATION_TOPIC = process.env.KAFKA_NOTIFICATION_TOPIC || 'notifications';
 const consumer = kafka.consumer({ groupId: 'chat-group' });
@@ -22,25 +33,28 @@ const notificationConsumer = kafka.consumer({ groupId: 'notification-group' });
 
 const userSocketMap: { [key: string]: string } = {}; 
 
-export const getReceiverSocketId = (receiverId: string) => {
-  return userSocketMap[receiverId];
+
+// Modified to use Redis
+export const getReceiverSocketId = async (receiverId: string) => {
+  return await pubClient.hGet('users', receiverId);
 };
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId as string;
 
   if (userId) {
-    userSocketMap[userId] = socket.id;
-    console.log(`User connected: ${userId}, Socket ID: ${socket.id}`);
+    pubClient.hSet('users', userId, socket.id).then(() => {
+      console.log(`User connected: ${userId}, Socket ID: ${socket.id}`);
+      io.emit('getOnlineUsers', Object.keys(userSocketMap));
+    });
   }
 
-  io.emit('getOnlineUsers', Object.keys(userSocketMap));
-
   socket.on('disconnect', () => {
-    if (userId && userSocketMap[userId]) {
-      console.log(`User disconnected: ${userId}`);
-      delete userSocketMap[userId];
-      io.emit('getOnlineUsers', Object.keys(userSocketMap));
+    if (userId) {
+      pubClient.hDel('users', userId).then(() => {
+        console.log(`User disconnected: ${userId}`);
+        io.emit('getOnlineUsers', Object.keys(userSocketMap));
+      });
     }
   });
 });
@@ -56,7 +70,7 @@ const runConsumer = async () => {
         if (message.value) {
           const newMessage = JSON.parse(message.value.toString());
           console.log('Received chat message:', newMessage);
-          const receiverSocketId = getReceiverSocketId(newMessage.receiverId);
+          const receiverSocketId = await getReceiverSocketId(newMessage.receiverId);
           if (receiverSocketId) {
             io.to(receiverSocketId).emit('newMessage', newMessage);
             console.log('Message emitted to receiver:', receiverSocketId);
@@ -89,7 +103,7 @@ const runNotificationConsumer = async () => {
           const notification = JSON.parse(message.value.toString());
           console.log('Received notification:', notification);
 
-          const receiverSocketId = getReceiverSocketId(notification.receiverId);
+          const receiverSocketId = await getReceiverSocketId(notification.receiverId);
           if (receiverSocketId) {
             io.to(receiverSocketId).emit('newNotification', notification);
             console.log("Notification emitted to receiver:", receiverSocketId);
@@ -105,7 +119,6 @@ const runNotificationConsumer = async () => {
     console.error('Error in Kafka Notification Consumer:', err);
   }
 };
-
 
 runConsumer();
 runNotificationConsumer();

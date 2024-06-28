@@ -1,6 +1,6 @@
 
 import { Request, Response } from 'express';
-import prisma from '../db/prisma.js'; // Adjust path as needed
+import prisma from '../db/prisma.js'; 
 import producer, { sendNotification } from '../kafka/kafkaProducer.js';
 import redisClient from "../redis/redisClient.js";
 
