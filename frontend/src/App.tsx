@@ -7,12 +7,12 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {Toaster} from "react-hot-toast";
 
-import useListenNotifications from "./hooks/useListenNotifications";
+// import useListenNotifications from "./hooks/useListenNotifications";
 
 function App() {
   const {authUser,isLoading} = useAuthContext();
 
-useListenNotifications();
+// useListenNotifications();
 
   if(isLoading) return null;
   return (
