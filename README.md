@@ -11,7 +11,7 @@ Swiftchat is a scalable real-time chatting application that harnesses advanced t
 <div align="center">
   <h2>Demo Video</h2>
   <a href="https://www.youtube.com/watch?v=4brKi0LKvPM" target="_blank">
-    <img src="https://img.youtube.com/vi/4brKi0LKvPM/0.jpg" alt="Watch the video" width="600" height="400"/>
+    <img src="https://img.youtube.com/vi/4brKi0LKvPM/maxresdefault.jpg" alt="Watch the video" width="600" height="auto"/>
   </a>
 </div>
 
