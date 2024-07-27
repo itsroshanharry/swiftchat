@@ -65,13 +65,12 @@ export const sendMessage = async (req: Request, res: Response) => {
         messages: [{ value: messagePayload }],
       });
 
-      // Send notification with sender's full name
       const notification = {
         type: 'newMessage',
         senderId,
         senderFullName: sender.fullName,
         senderProfilePic: sender.profilePic,
-        message: `New message received from ${sender.fullName}`, // Include sender's full name
+        message: `New message received from ${sender.fullName}`, 
         receiverId,
       };
       await sendNotification(notification);

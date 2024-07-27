@@ -1,5 +1,3 @@
-// kafkaProducer.ts
-
 import kafka from './kafkaClient.js';
 import { Partitioners } from 'kafkajs';
 

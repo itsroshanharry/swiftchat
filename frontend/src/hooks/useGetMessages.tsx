@@ -11,7 +11,7 @@ const useGetMessages = () => {
       if (!selectedConversation) return;
 
       setLoading(true);
-      setMessages([]); // Clear messages when changing conversations
+      setMessages([]);
 
       try {
         const res = await fetch(`/api/messages/${selectedConversation.id}`);

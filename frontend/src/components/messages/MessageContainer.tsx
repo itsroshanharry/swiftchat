@@ -1,27 +1,15 @@
-// import { useEffect } from "react";
 import { useAuthContext } from "../../context/AuthContext";
-// import useListenNotifications from "../../hooks/useListenMessages";
 import useConversation from "../../zustand/useConversation";
-// import useNotifications, { Notification } from "../../zustand/useNotification"; // Import Notification type
 import MessageInput from "./MessageInput";
 import Messages from "./Messages";
 
 
 import { MessageCircle } from "lucide-react";
-// import { toast } from "react-toastify";
+
 
 const MessageContainer = () => {
     const { selectedConversation } = useConversation();
-    // const { notifications } = useNotifications(); // Get notifications from Zustand
-
-//    useListenNotifications();
-
-    // Display toast for new notifications
-    // useEffect(() => {
-    //     notifications.forEach((notification: Notification) => {
-    //         toast(notification.notification);
-    //     });
-    // }, [notifications]);
+   
 
     return (
         <div className='w-full flex flex-col'>

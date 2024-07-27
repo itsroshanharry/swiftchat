@@ -33,7 +33,7 @@ const notificationConsumer = kafka.consumer({ groupId: 'notification-group' });
 
 const userSocketMap: { [key: string]: string } = {};
 
-// Modified to use Redis
+
 export const getReceiverSocketId = async (receiverId: string) => {
   return await pubClient.hGet('users', receiverId);
 };

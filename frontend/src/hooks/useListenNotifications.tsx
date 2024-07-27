@@ -15,8 +15,8 @@ const useListenNotifications = () => {
     const handleNotificationClick = useCallback((notification: Notification) => {
         setSelectedConversation({
             id: notification.senderId,
-            fullName: notification.senderFullName, // You might need to fetch this separately
-            profilePic: notification.senderProfilePic // You might need to fetch this separately
+            fullName: notification.senderFullName, 
+            profilePic: notification.senderProfilePic
         });
         navigate("/");
     }, [setSelectedConversation, navigate]);
